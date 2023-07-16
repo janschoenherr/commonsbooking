@@ -14,6 +14,10 @@ use CommonsBooking\Repository\Timeframe;
 
 class TimeframeExport {
 
+	const LOCATION_FIELD = 'location-fields';
+	const ITEM_FIELD = 'item-fields';
+	const USER_FIELD = 'user-fields';
+
 	/**
 	 * @param $field_args
 	 * @param $field
