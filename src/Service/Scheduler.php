@@ -3,7 +3,6 @@
 namespace CommonsBooking\Service;
 
 use CommonsBooking\Settings\Settings;
-use CommonsBooking\View\TimeframeExport;
 
 class Scheduler {
 
@@ -144,7 +143,7 @@ class Scheduler {
 		New Scheduler(
 			'export',
 			function() use ( $exportPath ) {
-				TimeframeExport::exportCsv( $exportPath );
+				TimeframeExport::cronExport( $exportPath );
 			},
 			$exportInterval,
 			'',
