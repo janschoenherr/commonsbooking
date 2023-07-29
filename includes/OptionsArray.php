@@ -877,7 +877,7 @@ Please let us know if any problems occurred.<br>
 						'name'          => commonsbooking_sanitizeHTML( __( 'Export', 'commonsbooking' ) ),
 						'id'            => 'export-custom-field',
 						'type'          => 'text',
-						'render_row_cb' => array( TimeframeExport::class, 'renderExportForm' ),
+						'render_row_cb' => array( TimeframeExport::class, 'renderExportButton' ),
 					)
 				]
 			),
