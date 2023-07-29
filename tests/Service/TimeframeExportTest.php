@@ -13,6 +13,30 @@ class TimeframeExportTest extends CustomPostTypeTest
 {
 	protected Booking $booking;
 
+	public function testCron() {
+		$yesterday = new DateTime(self::CURRENT_DATE);
+		$yesterday->modify('-1 day');
+		$tomorrow = new DateTime(self::CURRENT_DATE);
+		$tomorrow->modify('+1 day');
+		$testFile = '/tmp/test.csv';
+		$export = new TimeframeExport(
+			Timeframe::BOOKING_ID,
+			$yesterday->format('Y-m-d'),
+			$tomorrow->format('Y-m-d')
+		);
+		$export->setCron();
+		$export->getExportData();
+		$export->getCSV($testFile);
+		$this->assertFileExists($testFile);
+		$this->assertFileIsReadable($testFile);
+		$content = file_get_contents($testFile);
+		$this->assertNotEmpty($content);
+		$objects = $this->csvStringToStdObjects($content);
+		$this->assertEquals(1, count($objects));
+		$exportedBooking = reset($objects);
+		$this->assertEquals($this->booking->ID, $exportedBooking->ID);
+	}
+
 	public function testGetCSV()
 	{
 		$yesterday = new DateTime(self::CURRENT_DATE);
@@ -39,6 +63,9 @@ class TimeframeExportTest extends CustomPostTypeTest
 
 		$result = [];
 		foreach ( $rows as $row ) {
+			if ( empty( $row ) ) {
+				continue;
+			}
 			$data = str_getcsv( $row, ';' );
 			$obj  = new stdClass();
 

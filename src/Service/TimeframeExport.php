@@ -303,11 +303,10 @@ class TimeframeExport {
 		}
 		if ( $this->isCron ) {
 			fclose( $output );
-			exit;
+			return '';
 		}
 		else {
 			rewind( $output );
-
 			return rtrim( stream_get_contents( $output ) );
 		}
 	}
@@ -347,11 +346,11 @@ class TimeframeExport {
 	 * @throws InvalidArgumentException
 	 */
 	public function getExportData( ): bool {
-		if ( ! $this->isCron && $this->lastProcessedDate === null){
+
+		if (!$this->isCron) {
+			$start = ($this->lastProcessedDate === null) ? $this->exportStartDate : $this->lastProcessedDate;
+		} else {
 			$start = $this->exportStartDate;
-		}
-		else {
-			$start = $this->lastProcessedDate;
 		}
 		$end = $this->exportEndDate;
 
