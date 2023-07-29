@@ -15,10 +15,10 @@ class TimeframeExport {
 	/**
 	 * The post type to export.
 	 * This corresponds to the return of @see \CommonsBooking\Wordpress\CustomPostType\Timeframe::getTypes()
-	 * The all option is also valid.
+	 * The all option is corresponding to 0.
 	 * @var string
 	 */
-	private string $exportType;
+	private int $exportType;
 	private ?array $locationFields = null;
 	private ?array $itemFields = null;
 	private ?array $userFields = null;
@@ -65,6 +65,14 @@ class TimeframeExport {
 		if ( ! array_key_exists($exportType,\CommonsBooking\Wordpress\CustomPostType\Timeframe::getTypes(true)) ){
 			throw new ExportException('Post type to export not valid');
 		}
+		else {
+			if ($exportType === 'all') {
+				$exportType = 0;
+			}
+			else {
+				$exportType = intval ($exportType);
+			}
+		}
 		$startDateTimestamp = strtotime( $exportStartDate );
 		if ( ! $startDateTimestamp ) {
 			throw new ExportException( __("Invalid start date",'commonsbooking') );
@@ -78,7 +86,6 @@ class TimeframeExport {
 		}
 
 		$this->exportFilename  = 'timeframe-export-' .  date('Y-m-d-H-i-s') . '.csv';
-
 		$this->exportType = $exportType;
 		$this->exportStartDate = $exportStartDate;
 		$this->exportEndDate   = $exportEndDate;
@@ -308,15 +315,19 @@ class TimeframeExport {
 	/**
 	 * Gets export fields array from the comma separated string in the settings.
 	 *
-	 * @param $inputName
+	 * @param $inputString
 	 *
 	 * @return false|string[]
 	 */
-	protected static function convertInputFields( $inputString ) {
+	private static function convertInputFields( $inputString ) {
 		return array_filter( explode( ',', sanitize_text_field($inputString) ) );
 	}
 
-	public function getProgressString() : string {
+	/**
+	 * This will get a formatted string to display the amount of days that have been processed to the user.
+	 * @return string
+	 */
+	private function getProgressString() : string {
 		if ( $this->lastProcessedDate === null ) {
 			return '';
 		}
@@ -330,9 +341,7 @@ class TimeframeExport {
 
 	/**
 	 * Returns data for export.
-	 * This is the slowest function
-	 *
-	 * @param false $isCron
+	 * This is the slowest function and is therefore called multiple times via AJAX request.
 	 *
 	 * @return bool - False if all days have been processed, True if there are still days left that have to be processed
 	 * @throws InvalidArgumentException
@@ -349,9 +358,6 @@ class TimeframeExport {
 		// Timerange
 		$period = self::getPeriod( $start, $end );
 
-		// Types
-		$type = self::getType();
-
 		$dayCounter = 0;
 		foreach ( $period as $dt ) {
 			$dayCounter++;
@@ -363,7 +369,7 @@ class TimeframeExport {
 			$dayTimeframes = Timeframe::get(
 				[],
 				[],
-				$type ? [$type] : [],
+				$this->exportType ? [$this->exportType] : [],
 				$dt->format( "Y-m-d" ),
 				false,
 				null,
@@ -384,7 +390,7 @@ class TimeframeExport {
 	 *
 	 * @return DatePeriod
 	 */
-	protected static function getPeriod( $start, $end ): DatePeriod {
+	private static function getPeriod( $start, $end ): DatePeriod {
 		// Timerange
 		$begin = Wordpress::getUTCDateTime( $start );
 		$end   = Wordpress::getUTCDateTime( $end );
@@ -395,41 +401,21 @@ class TimeframeExport {
 	}
 
 	/**
-	 * Returns selected timeframe type id.
-	 * @return int
-	 */
-	protected static function getType(): int {
-		$type = 0;
-
-		// Backend download
-		if ( array_key_exists( 'export-type', $_REQUEST ) && $_REQUEST['export-type'] !== 'all' ) {
-			$type = intval( $_REQUEST['export-type'] );
-		} else {
-			//cron download
-			$configuredType = Settings::getOption( 'commonsbooking_options_export', 'export-type' );
-			if ( $configuredType && $configuredType != 'all' ) {
-				$type = intval( $configuredType );
-			}
-		}
-
-		return $type;
-	}
-
-	/**
 	 * Prepares timeframe data array.
 	 *
 	 * @param \CommonsBooking\Model\Timeframe $timeframePost
 	 *
 	 * @return array
+	 * @throws \Exception
 	 */
 	protected static function getTimeframeData( \CommonsBooking\Model\Timeframe $timeframePost ): array {
 		$timeframeData = self::getRelevantTimeframeFields( $timeframePost );
 
 		// Timeframe typ
 		$timeframeTypeId       = $timeframePost->getFieldValue( 'type' );
-		$timeframetypes        = \CommonsBooking\Wordpress\CustomPostType\Timeframe::getTypes();
-		$timeframeData['type'] = array_key_exists( $timeframeTypeId, $timeframetypes ) ?
-			$timeframetypes[ $timeframeTypeId ] : __( 'Unknown', 'commonsbooking' );
+		$timeframeTypes        = \CommonsBooking\Wordpress\CustomPostType\Timeframe::getTypes();
+		$timeframeData['type'] = array_key_exists( $timeframeTypeId, $timeframeTypes ) ?
+			$timeframeTypes[ $timeframeTypeId ] : __( 'Unknown', 'commonsbooking' );
 
 		if ( $timeframeTypeId == \CommonsBooking\Wordpress\CustomPostType\Timeframe::BOOKING_ID ) {
 			$booking = new \CommonsBooking\Model\Booking( $timeframePost->ID );
@@ -490,13 +476,13 @@ class TimeframeExport {
 	}
 
 	/**
-	 * Removes not relevant fields from timeframedata.
+	 * Removes not relevant fields from timeframe data.
 	 *
 	 * @param $timeframe
 	 *
 	 * @return array
 	 */
-	protected static function getRelevantTimeframeFields( $timeframe ) {
+	private static function getRelevantTimeframeFields( $timeframe ): array {
 		$postArray               = get_object_vars( $timeframe->getPost() );
 		$relevantTimeframeFields = [
 			'ID',
@@ -520,6 +506,10 @@ class TimeframeExport {
 		);
 	}
 
+	/**
+	 * Sets the cron flag. This is used to determine if the export is triggered by a cron job.
+	 * @return void
+	 */
 	public function setCron(): void {
 		$this->isCron = true;
 	}
