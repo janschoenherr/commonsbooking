@@ -3,6 +3,10 @@
 
 namespace CommonsBooking\View;
 
+/**
+ * This class is used to render the export button for the timeframe post type
+ * For the functional part, @see \CommonsBooking\Service\TimeframeExport
+ */
 class TimeframeExport {
 
 	const LOCATION_FIELD = 'location-fields';

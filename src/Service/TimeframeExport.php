@@ -10,6 +10,12 @@ use DateInterval;
 use DatePeriod;
 use Psr\Cache\InvalidArgumentException;
 
+/**
+ * The TimeframeExport class will export timeframes to a CSV file.
+ * This can be done either from the backend settings or via a cron job.
+ * The export can contain timeframes of a specific type, location, item and user.
+ * The export can also include bookings.
+ */
 class TimeframeExport {
 
 	/**
