@@ -124,7 +124,7 @@ class TimeframeExport {
 
 		try {
 			$exportObject        = new self(
-				intval($postSettings['exportType']),
+				$postSettings['exportType'],
 				$postSettings['exportStartDate'],
 				$postSettings['exportEndDate'],
 				$postSettings['locationFields'] ? self::convertInputFields($postSettings['locationFields']) : null,
