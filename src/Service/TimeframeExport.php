@@ -163,7 +163,7 @@ class TimeframeExport {
 		}
 		else {
 			$options = array(
-				'exportType' => $exportObject->exportType,
+				'exportType' => $exportObject->exportType == 0 ? "all" : $exportObject->exportType,
 				'exportStartDate' => $exportObject->exportStartDate,
 				'exportEndDate' => $exportObject->exportEndDate,
 				'locationFields' => $exportObject->locationFields,
@@ -381,7 +381,9 @@ class TimeframeExport {
 				[ 'canceled', 'confirmed', 'unconfirmed', 'publish', 'inherit' ]
 			);
 			foreach ( $dayTimeframes as $timeframe ) {
-				$this->relevantTimeframes[] = $timeframe->ID;
+				if (! is_array($this->relevantTimeframes) || ! in_array($timeframe->ID, $this->relevantTimeframes) ) {
+					$this->relevantTimeframes[] = $timeframe->ID;
+				}
 			}
 		}
 		$this->exportDataComplete = true;
@@ -465,6 +467,7 @@ class TimeframeExport {
 		$timeframeData[\CommonsBooking\Model\Timeframe::REPETITION_END] =
 			$timeframePost->getEndDate() ?
 				date( 'c', $timeframePost->getEndDate() ) : '';
+		$userData = $timeframePost->getUserData();
 		$timeframeData["start-time"]          = $timeframePost->getStartTime();
 		$timeframeData["end-time"]            = $timeframePost->getEndTime();
 		$timeframeData["pickup"]              = isset( $booking ) ? $booking->pickupDatetime() : "";
@@ -472,9 +475,9 @@ class TimeframeExport {
 		$timeframeData["booking-code"]        = $timeframePost->getFieldValue( "_cb_bookingcode" );
 		$timeframeData["location-post_title"] = $location_title;
 		$timeframeData["item-post_title"]     = $item_title;
-		$timeframeData["user-firstname"]      = $timeframePost->getUserData()->first_name;
-		$timeframeData["user-lastname"]       = $timeframePost->getUserData()->last_name;
-		$timeframeData["user-login"]          = $timeframePost->getUserData()->user_login;
+		$timeframeData["user-firstname"]      = $userData->first_name ?? '';
+		$timeframeData["user-lastname"]       = $userData->last_name ?? '';
+		$timeframeData["user-login"]          = $userData->user_login ?? '';
 		$timeframeData["comment"]             = $timeframePost->getFieldValue('comment');
 
 		return $timeframeData;
