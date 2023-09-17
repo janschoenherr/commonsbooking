@@ -169,7 +169,7 @@ class Timeframe extends PostRepository {
 	 * @return mixed
 	 * @throws \Psr\Cache\InvalidArgumentException
 	 */
-	public static function getPostIdsByType( array $types = [], array $items = [], array $locations = [], ?int $minTimestamp = null, ?int $maxTimestamp = null ): array {
+	public static function getPostIdsByType( array $types = [], array $items = [], array $locations = [], ?int $minTimestamp = null, ?int $maxTimestamp = null): array {
 
 		if ( ! count( $types ) ) {
 			$types = [
@@ -223,22 +223,43 @@ class Timeframe extends PostRepository {
                 ";
 			}
 
-			$dateQuery = "";
-			if ( $minTimestamp && ! $maxTimestamp ) {
-				$dateQuery = self::getFilterFromDateQuery( $table_postmeta, $minTimestamp );
+			//query for min/max timestamp. Also always includes timestamps that lie within the startDate and do not
+			//have an enddate
+			$timestampQuery = "";
+			if ( $minTimestamp !== null ) {
+				$timestampQuery = "
+					INNER JOIN $table_postmeta pm4 ON
+						pm4.post_id = pm1.post_id AND (
+							pm4.meta_key = '" . \CommonsBooking\Model\Timeframe::REPETITION_START . "' AND
+							pm4.meta_value >= $minTimestamp
+						)
+				";
 			}
-			elseif ( $minTimestamp && $maxTimestamp ) {
-				$dateQuery = self::getTimerangeQuery( $table_postmeta, $minTimestamp, $maxTimestamp );
+
+			if ( $maxTimestamp !== null ) {
+				$timestampQuery .= "
+                    INNER JOIN $table_postmeta pm5 ON
+                        pm5.post_id = pm1.post_id AND (
+                            pm5.meta_key = '" . \CommonsBooking\Model\Timeframe::REPETITION_END . "' AND
+                            pm5.meta_value <= $maxTimestamp
+                        )
+                        OR (
+							NOT EXISTS ( 
+								SELECT * FROM $table_postmeta 
+								WHERE
+									meta_key = '" . \CommonsBooking\Model\Timeframe::REPETITION_END . "' AND
+									post_id = pm5.post_id
+							)
+						)
+                ";
 			}
-
-
-
-			// Complete query, including types
+				// Complete query, including types
 			$query = "
                 SELECT DISTINCT pm1.post_id from $table_postmeta pm1 
-                " .  $dateQuery .
+                " .
 			         $itemQuery .
 			         $locationQuery .
+			         $timestampQuery .
 			         "   
                  WHERE
                     pm1.meta_key = 'type' AND
@@ -616,7 +637,7 @@ class Timeframe extends PostRepository {
 	 */
 	public static function getInRange(
 		$minTimestamp,
-		$maxTimestamp,
+		$maxTimestamp = null,
 		array $locations = [],
 		array $items = [],
 		array $types = [],
