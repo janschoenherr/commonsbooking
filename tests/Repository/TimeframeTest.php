@@ -39,8 +39,17 @@ class TimeframeTest extends CustomPostTypeTest {
 	}
 
 	public function testGetInRange() {
+		//get for range without endtime
+		$inRangeTimeFrames = Timeframe::getInRange(self::REPETITION_START);
+		$this->assertEquals(2, count($inRangeTimeFrames));
+		$postIds = array_map(function($timeframe) {
+			return $timeframe->ID;
+		}, $inRangeTimeFrames);
+		$this->assertContains($this->timeframeId, $postIds);
+		$this->assertContains($this->timeframe2Id, $postIds);
+		//get for range with specific enddate
 		$inRangeTimeFrames = Timeframe::getInRange(self::REPETITION_START, self::REPETITION_END);
-		$this->assertTrue(count($inRangeTimeFrames) == 2);
+		$this->assertEquals(2, count($inRangeTimeFrames));
 		$postIds = array_map(function($timeframe) {
 			return $timeframe->ID;
 		}, $inRangeTimeFrames);
