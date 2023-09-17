@@ -364,6 +364,7 @@ class TimeframeExport {
 		$period = self::getPeriod( $start, $end );
 
 		$dayCounter = 0;
+		/** @var \DateTime $dt */
 		foreach ( $period as $dt ) {
 			$dayCounter++;
 			if (! $this->isCron && $dayCounter >= self::ITERATION_COUNTS) {
@@ -376,11 +377,10 @@ class TimeframeExport {
 			$dayEndTimestamp = $dt->getTimestamp();
 			$dayTimeframes = Timeframe::getInRange(
 				$dayBeginningTimestamp,
-				$dayEndTimestamp
+				$dayEndTimestamp,
 				[],
 				[],
 				$this->exportType ? [$this->exportType] : [],
-				$dt->format( "Y-m-d" ),
 				false,
 				[ 'canceled', 'confirmed', 'unconfirmed', 'publish', 'inherit' ]
 			);
