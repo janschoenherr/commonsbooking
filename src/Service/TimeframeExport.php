@@ -371,13 +371,17 @@ class TimeframeExport {
 				$this->lastProcessedDate = $dt->format( "Y-m-d" );
 				return false;
 			}
-			$dayTimeframes = Timeframe::get(
+			$dayBeginningTimestamp = $dt->getTimestamp();
+			$dt->setTime( 23, 59, 59 );
+			$dayEndTimestamp = $dt->getTimestamp();
+			$dayTimeframes = Timeframe::getInRange(
+				$dayBeginningTimestamp,
+				$dayEndTimestamp
 				[],
 				[],
 				$this->exportType ? [$this->exportType] : [],
 				$dt->format( "Y-m-d" ),
 				false,
-				null,
 				[ 'canceled', 'confirmed', 'unconfirmed', 'publish', 'inherit' ]
 			);
 			foreach ( $dayTimeframes as $timeframe ) {
