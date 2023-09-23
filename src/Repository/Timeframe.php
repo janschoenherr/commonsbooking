@@ -226,7 +226,7 @@ class Timeframe extends PostRepository {
 			//query for min/max timestamp. Also always includes timestamps that lie within the startDate and do not
 			//have an enddate
 			$timestampQuery = "";
-			if ( $minTimestamp ) {
+			if ( $minTimestamp !== null ) {
 				$timestampQuery = "
 					INNER JOIN $table_postmeta pm4 ON
 						pm4.post_id = pm1.post_id AND (
@@ -236,7 +236,7 @@ class Timeframe extends PostRepository {
 				";
 			}
 
-			if ( $maxTimestamp ) {
+			if ( $maxTimestamp !== null ) {
 				$timestampQuery .= "
                     INNER JOIN $table_postmeta pm5 ON
                         pm5.post_id = pm1.post_id AND (
