@@ -169,7 +169,7 @@ class Timeframe extends PostRepository {
 	 * @return mixed
 	 * @throws \Psr\Cache\InvalidArgumentException
 	 */
-	public static function getPostIdsByType( array $types = [], array $items = [], array $locations = [], ?int $minTimestamp = null, ?int $maxTimestamp = null ): array {
+	public static function getPostIdsByType( array $types = [], array $items = [], array $locations = [] ) {
 
 		if ( ! count( $types ) ) {
 			$types = [
@@ -198,8 +198,6 @@ class Timeframe extends PostRepository {
             $items      = commonsbooking_sanitizeArrayorString( $items, 'intval' );
             $locations  = commonsbooking_sanitizeArrayorString( $locations, 'intval' );
             $types      = commonsbooking_sanitizeArrayorString( $types, 'intval' );
-			$minTimestamp = commonsbooking_sanitizeArrayorString( $minTimestamp, 'intval' );
-			$maxTimestamp = commonsbooking_sanitizeArrayorString( $maxTimestamp, 'intval' );
 
 
 			// Query for item(s)
@@ -223,20 +221,10 @@ class Timeframe extends PostRepository {
                 ";
 			}
 
-			$dateQuery = "";
-			if ( $minTimestamp && ! $maxTimestamp ) {
-				$dateQuery = self::getFilterFromDateQuery( $table_postmeta, $minTimestamp );
-			}
-			elseif ( $minTimestamp && $maxTimestamp ) {
-				$dateQuery = self::getTimerangeQuery( $table_postmeta, $minTimestamp, $maxTimestamp );
-			}
-
-
-
 			// Complete query, including types
 			$query = "
                 SELECT DISTINCT pm1.post_id from $table_postmeta pm1 
-                " .  $dateQuery .
+                " .
 			         $itemQuery .
 			         $locationQuery .
 			         "   
@@ -641,7 +629,7 @@ class Timeframe extends PostRepository {
 			$posts = [];
 
 			// Get Post-IDs considering types, items and locations
-			$postIds = self::getPostIdsByType( $types, $items, $locations, $minTimestamp, $maxTimestamp );
+			$postIds = self::getPostIdsByType( $types, $items, $locations );
 
 			if ( $postIds && count( $postIds ) ) {
 				$posts = self::getPostsByBaseParams(
