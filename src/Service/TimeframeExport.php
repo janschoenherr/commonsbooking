@@ -36,11 +36,12 @@ class TimeframeExport {
 	private bool $exportDataComplete = false;
 	private bool $isCron = false;
 
-	private ?string $lastProcessedDate = null;
+	private ?string $lastProcessedPage = null;
+	private ?string $totalPages;
 	private ?array $relevantTimeframes = null;
 
 	/**
-	 * Defines how many days will be processed in one iteration. Higher numbers increases the likelihood for a timeout.
+	 * Defines how many pages will be processed in one iteration. Higher numbers increases the likelihood for a timeout.
 	 */
 	const ITERATION_COUNTS = 25;
 
@@ -52,7 +53,8 @@ class TimeframeExport {
 	 * @param array|null $locationFields
 	 * @param array|null $itemFields
 	 * @param array|null $userFields
-	 * @param string|null $lastProcessedDate
+	 * @param string|null $lastProcessedPage
+	 * @param string|null $totalPages
 	 * @param array|null $relevantTimeframes
 	 *
 	 * @throws ExportException
@@ -64,7 +66,8 @@ class TimeframeExport {
 		array $locationFields = null,
 		array $itemFields = null,
 		array $userFields = null,
-		string $lastProcessedDate = null,
+		string $lastProcessedPage = null,
+		string $totalPages = null,
 		array $relevantTimeframes = null
 	) {
 
@@ -98,7 +101,8 @@ class TimeframeExport {
 		$this->locationFields  = $locationFields;
 		$this->itemFields      = $itemFields;
 		$this->userFields      = $userFields;
-		$this->lastProcessedDate = $lastProcessedDate;
+		$this->lastProcessedPage = $lastProcessedPage;
+		$this->totalPages = $totalPages;
 		$this->relevantTimeframes = $relevantTimeframes;
 	}
 
@@ -130,7 +134,8 @@ class TimeframeExport {
 				$postSettings['locationFields'] ? self::convertInputFields($postSettings['locationFields']) : null,
 				$postSettings['itemFields'] ? self::convertInputFields($postSettings['itemFields']) : null,
 				$postSettings['userFields'] ? self::convertInputFields($postSettings['userFields']) : null,
-				$postSettings['lastProcessedDate'] ?? null,
+				$postSettings['lastProcessedPage'] ?? null,
+				$postSettings['totalPages'] ?? null,
 				$relevantTimeframes,
 			);
 		} catch ( ExportException $e ) {
@@ -141,8 +146,9 @@ class TimeframeExport {
 			) );
 			return;
 		}
-		$exportFinished = $exportObject->getExportData();
-		if ( $exportFinished ) {
+		$nextPage           = $exportObject->lastProcessedPage ? intval( $exportObject->lastProcessedPage ) + 1 : 1;
+		$exportObject->getExportDataPaginated( $nextPage );
+		if ( $exportObject->exportDataComplete ) {
 			try {
 				$csvString = $exportObject->getCSV();
 			} catch ( ExportException $e ) {
@@ -169,7 +175,8 @@ class TimeframeExport {
 				'locationFields' => $exportObject->locationFields,
 				'itemFields' => $exportObject->itemFields,
 				'userFields' => $exportObject->userFields,
-				'lastProcessedDate' => $exportObject->lastProcessedDate,
+				'lastProcessedPage' => $exportObject->lastProcessedPage,
+				'totalPages' => $exportObject->totalPages,
 				'relevantTimeframes' => $exportObject->relevantTimeframes,
 			);
 			wp_send_json( array(
@@ -333,12 +340,12 @@ class TimeframeExport {
 	 * @return string
 	 */
 	private function getProgressString() : string {
-		if ( $this->lastProcessedDate === null ) {
+		if ( $this->lastProcessedPage === null ) {
 			return '';
 		}
 		$startDt = new \DateTime( $this->exportStartDate );
 		$endDt   = new \DateTime( $this->exportEndDate );
-		$progressDt = new \DateTime( $this->lastProcessedDate );
+		$progressDt = new \DateTime( $this->lastProcessedPage );
 		$totalDays = $startDt->diff( $endDt )->days;
 		$progressDays = $startDt->diff( $progressDt )->days;
 		return sprintf( __( 'Processed %d of %d days', 'commonsbooking' ), $progressDays, $totalDays );
@@ -354,7 +361,7 @@ class TimeframeExport {
 	public function getExportData( ): bool {
 
 		if (!$this->isCron) {
-			$start = ($this->lastProcessedDate === null) ? $this->exportStartDate : $this->lastProcessedDate;
+			$start = ( $this->lastProcessedPage === null) ? $this->exportStartDate : $this->lastProcessedPage;
 		} else {
 			$start = $this->exportStartDate;
 		}
@@ -368,7 +375,7 @@ class TimeframeExport {
 			$dayCounter++;
 			if (! $this->isCron && $dayCounter >= self::ITERATION_COUNTS) {
 				//if we have to break, we later begin again at the last processed date
-				$this->lastProcessedDate = $dt->format( "Y-m-d" );
+				$this->lastProcessedPage = $dt->format( "Y-m-d" );
 				return false;
 			}
 			$dayTimeframes = Timeframe::get(
@@ -389,6 +396,39 @@ class TimeframeExport {
 		$this->exportDataComplete = true;
 		return true;
 	}
+
+	public function getExportDataPaginated( $page = 1 ) {
+		$start = ( $this->lastProcessedPage === null) ? $this->exportStartDate : $this->lastProcessedPage;
+		$end = $this->exportEndDate;
+
+		$period = self::getPeriod( $start, $end );
+		if ($this->exportType == 0) {
+			$types = array_keys(\CommonsBooking\Wordpress\CustomPostType\Timeframe::getTypes());
+		}
+		else {
+			$types = [$this->exportType];
+		}
+		$relevantTimeframes = Timeframe::getInRangePaginated(
+			$period->getStartDate()->getTimestamp(),
+			$period->getEndDate()->getTimestamp(),
+			$page,
+			self::ITERATION_COUNTS,
+			$types
+		);
+
+		if ($this->totalPages === null) {
+			$this->totalPages = $relevantTimeframes['totalPages'];
+		}
+		$this->lastProcessedPage = $page;
+		$this->exportDataComplete = $page['done'];
+
+		foreach ( $relevantTimeframes['posts'] as $timeframe ) {
+			if (! is_array($this->relevantTimeframes) || ! in_array($timeframe->ID, $this->relevantTimeframes) ) {
+				$this->relevantTimeframes[] = $timeframe->ID;
+			}
+		}
+	}
+
 
 	/**
 	 * Will get a DatePeriod object from two datestring

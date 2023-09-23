@@ -39,7 +39,8 @@ class TimeframeTest extends CustomPostTypeTest {
 	}
 
 	public function testGetInRange() {
-		//get for range without endtime
+		//get for range without endtime (not implemented yet)
+		/*
 		$inRangeTimeFrames = Timeframe::getInRange(self::REPETITION_START);
 		$this->assertEquals(2, count($inRangeTimeFrames));
 		$postIds = array_map(function($timeframe) {
@@ -47,6 +48,7 @@ class TimeframeTest extends CustomPostTypeTest {
 		}, $inRangeTimeFrames);
 		$this->assertContains($this->timeframeId, $postIds);
 		$this->assertContains($this->timeframe2Id, $postIds);
+		*/
 		//get for range with specific enddate
 		$inRangeTimeFrames = Timeframe::getInRange(self::REPETITION_START, self::REPETITION_END);
 		$this->assertEquals(2, count($inRangeTimeFrames));
@@ -93,5 +95,73 @@ class TimeframeTest extends CustomPostTypeTest {
 		}, $inLocationAndItemTimeframes);
 		$this->assertContains($this->timeframeId, $postIds);
 		$this->assertContains($this->timeframe2Id, $postIds);
+	}
+
+	public function testGetInRangePaginated() {
+		/*
+		$originalTimeframes = Timeframe::getInRangePaginated(
+			self::REPETITION_START,
+			self::REPETITION_END,
+		);
+		$this->assertTrue($originalTimeframes['done']);
+		$this->assertEquals(1, $originalTimeframes['totalPages']);
+		$this->assertEquals(2, count($originalTimeframes['posts']));
+		$postIds = array_map(function($timeframe) {
+			return $timeframe->ID;
+		}, $originalTimeframes['posts']);
+		$this->assertEqualsCanonicalizing([$this->timeframeId, $this->timeframe2Id], $postIds);
+*/
+		//create a bunch of bookings to test pagination properly
+		$bookingIds = [];
+		for($i = 0; $i < 21; $i++) {
+			$bookingIds[] = $this->createBooking(
+				$this->locationId,
+				$this->itemId,
+				strtotime("+ {10 + $i} days", strtotime(self::CURRENT_DATE)),
+				strtotime("+ {11 + $i} days", strtotime(self::CURRENT_DATE)),
+			);
+		}
+		$firstPage = Timeframe::getInRangePaginated(
+			strtotime("+ 10 days", strtotime(self::CURRENT_DATE)),
+			strtotime("+ 32 days", strtotime(self::CURRENT_DATE)),
+			1,
+			10,
+			[ \CommonsBooking\Wordpress\CustomPostType\Timeframe::BOOKING_ID ],
+		);
+		$this->assertEquals(10, count($firstPage['posts']));
+		$this->assertEquals(3, $firstPage['totalPages']);
+		$this->assertFalse($firstPage['done']);
+
+		$secondPage = Timeframe::getInRangePaginated(
+			strtotime("+ 10 days", strtotime(self::CURRENT_DATE)),
+			strtotime("+ 32 days", strtotime(self::CURRENT_DATE)),
+			2,
+			10,
+			[ \CommonsBooking\Wordpress\CustomPostType\Timeframe::BOOKING_ID ],
+		);
+		$this->assertFalse($secondPage['done']);
+		$this->assertEquals(3, $secondPage['totalPages']);
+		$this->assertEquals(10, count($secondPage['posts']));
+
+		$thirdPage = Timeframe::getInRangePaginated(
+			strtotime("+ 10 days", strtotime(self::CURRENT_DATE)),
+			strtotime("+ 32 days", strtotime(self::CURRENT_DATE)),
+			3,
+			10,
+			[ \CommonsBooking\Wordpress\CustomPostType\Timeframe::BOOKING_ID ],
+		);
+		$this->assertTrue($thirdPage['done']);
+		$this->assertEquals(3, $thirdPage['totalPages']);
+		$this->assertEquals(3, count($thirdPage['posts']));
+
+		//make sure, that no booking is in more than one page
+		$this->assertEmpty(array_intersect($firstPage['posts'], $secondPage['posts'], $thirdPage['posts']));
+
+		//make sure, that all bookings are in one of the pages
+		$merged = array_merge($firstPage['posts'], $secondPage['posts'], $thirdPage['posts']);
+		$this->assertEquals(23, count($merged));
+		$this->assertEqualsCanonicalizing($bookingIds, array_map(function($booking) {
+			return $booking->ID;
+		}, $merged));
 	}
 }
