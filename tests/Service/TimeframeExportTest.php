@@ -57,7 +57,7 @@ class TimeframeExportTest extends CustomPostTypeTest
 
 	}
 
-	private function csvStringToStdObjects( $csvString ): array {
+	public static function csvStringToStdObjects( $csvString ): array {
 		$rows   = explode( "\n", $csvString );
 		$header = str_getcsv( array_shift( $rows ), ';' );
 
