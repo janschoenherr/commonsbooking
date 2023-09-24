@@ -343,32 +343,20 @@ class TimeframeExport {
 	}
 
 	/**
-	 * Returns data for export.
-	 * This is the slowest function and is therefore called multiple times via AJAX request.
+	 * Returns data for cron export.
 	 *
 	 * @return bool - False if all days have been processed, True if there are still days left that have to be processed
 	 * @throws InvalidArgumentException
 	 */
 	public function getExportData( ): bool {
 
-		if (!$this->isCron) {
-			$start = ( $this->lastProcessedPage === null) ? $this->exportStartDate : $this->lastProcessedPage;
-		} else {
-			$start = $this->exportStartDate;
-		}
+		$start = $this->exportStartDate;
 		$end = $this->exportEndDate;
 
 		// Timerange
 		$period = self::getPeriod( $start, $end );
 
-		$dayCounter = 0;
 		foreach ( $period as $dt ) {
-			$dayCounter++;
-			if (! $this->isCron && $dayCounter >= self::ITERATION_COUNTS) {
-				//if we have to break, we later begin again at the last processed date
-				$this->lastProcessedPage = $dt->format( "Y-m-d" );
-				return false;
-			}
 			$dayTimeframes = Timeframe::get(
 				[],
 				[],
