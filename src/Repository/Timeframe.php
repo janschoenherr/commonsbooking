@@ -750,6 +750,7 @@ class Timeframe extends PostRepository {
 			return [
 				'posts'      => $posts,
 				'totalPages' => $query->max_num_pages,
+				'totalPosts' => $query->found_posts,
 				'done'       => $page >= $query->max_num_pages
 			];
 		}

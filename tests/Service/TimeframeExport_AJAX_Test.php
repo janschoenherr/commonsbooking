@@ -54,8 +54,6 @@ class TimeframeExport_AJAX_Test extends \WP_Ajax_UnitTestCase {
 	public function testAjaxExport_Paginated() {
 		//create ITERATION_COUNT + 1 bookings so that we have to paginate
 		$totalBookings = TimeframeExport::ITERATION_COUNTS + 1;
-		//the estimation is very conservative and is based on the page number, we have two pages here
-		$bookingEstimation = TimeframeExport::ITERATION_COUNTS * 2;
 		for ( $i = 0; $i < $totalBookings; $i++ ) {
 			$this->createBooking(
 				strtotime( '+ ' . $i . ' days', strtotime( CustomPostTypeTest::CURRENT_DATE ) ),
@@ -71,7 +69,7 @@ class TimeframeExport_AJAX_Test extends \WP_Ajax_UnitTestCase {
 		$firstPageResponse = json_decode( $rawFirstPageResponse );
 		$this->assertFalse( $firstPageResponse->success );
 		$this->assertFalse ( $firstPageResponse->error );
-		$this->assertEquals( 'Processed '. TimeframeExport::ITERATION_COUNTS .' of ~'. $bookingEstimation .' bookings', $firstPageResponse->progress );
+		$this->assertEquals( 'Processed '. TimeframeExport::ITERATION_COUNTS .' of '. $totalBookings .' bookings', $firstPageResponse->progress );
 		$tfs = $firstPageResponse->settings->relevantTimeframes;
 		$this->assertEquals( TimeframeExport::ITERATION_COUNTS, count( $tfs) );
 

@@ -37,7 +37,7 @@ class TimeframeExport {
 	private bool $isCron = false;
 
 	private ?string $lastProcessedPage = null;
-	private ?string $totalPages;
+	private ?string $totalPosts;
 	private ?array $relevantTimeframes = null;
 
 	/**
@@ -54,7 +54,7 @@ class TimeframeExport {
 	 * @param array|null $itemFields
 	 * @param array|null $userFields
 	 * @param string|null $lastProcessedPage
-	 * @param string|null $totalPages
+	 * @param string|null $totalPosts
 	 * @param array|null $relevantTimeframes
 	 *
 	 * @throws ExportException
@@ -67,7 +67,7 @@ class TimeframeExport {
 		array $itemFields = null,
 		array $userFields = null,
 		string $lastProcessedPage = null,
-		string $totalPages = null,
+		string $totalPosts = null,
 		array $relevantTimeframes = null
 	) {
 
@@ -102,7 +102,7 @@ class TimeframeExport {
 		$this->itemFields      = $itemFields;
 		$this->userFields      = $userFields;
 		$this->lastProcessedPage = $lastProcessedPage;
-		$this->totalPages = $totalPages;
+		$this->totalPosts = $totalPosts;
 		$this->relevantTimeframes = $relevantTimeframes;
 	}
 
@@ -170,7 +170,7 @@ class TimeframeExport {
 				'itemFields' => $exportObject->itemFields,
 				'userFields' => $exportObject->userFields,
 				'lastProcessedPage' => $exportObject->lastProcessedPage,
-				'totalPages' => $exportObject->totalPages,
+				'totalPosts' => $exportObject->totalPosts,
 				'relevantTimeframes' => $exportObject->relevantTimeframes,
 			);
 			wp_send_json( array(
@@ -337,9 +337,9 @@ class TimeframeExport {
 		if ( $this->lastProcessedPage === null ) {
 			return '';
 		}
-		$totalBookings = $this->totalPages * self::ITERATION_COUNTS;
+		$totalBookings = $this->totalPosts;
 		$progressBookings = $this->lastProcessedPage * self::ITERATION_COUNTS;
-		return sprintf( __( 'Processed %d of ~%d bookings', 'commonsbooking' ), $progressBookings, $totalBookings );
+		return sprintf( __( 'Processed %d of %d bookings', 'commonsbooking' ), $progressBookings, $totalBookings );
 	}
 
 	/**
@@ -395,8 +395,8 @@ class TimeframeExport {
 			$types
 		);
 
-		if ($this->totalPages === null) {
-			$this->totalPages = $relevantTimeframes['totalPages'];
+		if ( $this->totalPosts === null) {
+			$this->totalPosts = $relevantTimeframes['totalPosts'];
 		}
 		$this->lastProcessedPage = $page;
 		$this->exportDataComplete = $relevantTimeframes['done'];
