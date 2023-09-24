@@ -759,6 +759,7 @@ class Timeframe extends PostRepository {
 		return [
 			'posts'      => [],
 			'totalPages' => 0,
+			'totalPosts' => 0,
 			'done'       => true
 		];
 	}
