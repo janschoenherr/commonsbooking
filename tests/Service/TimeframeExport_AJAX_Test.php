@@ -101,7 +101,7 @@ class TimeframeExport_AJAX_Test extends \WP_Ajax_UnitTestCase {
 		parent::set_up();
 		add_action( 'wp_ajax_cb_export_timeframes', array( \CommonsBooking\Service\TimeframeExport::class, 'ajaxExportCsv' ) );
 		$currentDateNextMonth = new \DateTime( CustomPostTypeTest::CURRENT_DATE );
-		$currentDateNextMonth->modify( '+3 months' );
+		$currentDateNextMonth->modify( '+2 years' );
 		$currentDateNextMonth = $currentDateNextMonth->format( 'd.m.Y' );
 		$_POST['_wpnonce'] = wp_create_nonce( 'cb_export_timeframes' );
 		$exportSettings = array(

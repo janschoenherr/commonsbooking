@@ -43,7 +43,7 @@ class TimeframeExport {
 	/**
 	 * Defines how many pages will be processed in one iteration. Higher numbers increases the likelihood for a timeout.
 	 */
-	const ITERATION_COUNTS = 25;
+	const ITERATION_COUNTS = 100;
 
 	/**
 	 * @param string $exportType
