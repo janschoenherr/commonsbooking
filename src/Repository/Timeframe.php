@@ -700,7 +700,7 @@ class Timeframe extends PostRepository {
 				'relation' => 'AND',
 				array(
 					'key'     => \CommonsBooking\Model\Timeframe::REPETITION_START,
-					'value'   => $minTimestamp,
+					'value'   => $maxTimestamp,
 					'compare' => '<=',
 					'type'    => 'numeric'
 				),
@@ -708,7 +708,7 @@ class Timeframe extends PostRepository {
 					'relation' => 'OR',
 					array(
 						'key'     => \CommonsBooking\Model\Timeframe::REPETITION_END,
-						'value'   => $maxTimestamp,
+						'value'   => $minTimestamp,
 						'compare' => '>=',
 						'type'    => 'numeric'
 					),
@@ -735,16 +735,28 @@ class Timeframe extends PostRepository {
 
 		$query = new \WP_Query( $args );
 
-		$posts = $query->get_posts();
+		if ( $query->have_posts() ) {
+			$posts = $query->get_posts();
+			$posts = array_filter(
+				$posts,
+				function ( $post ) use ( $args ) {
+					return in_array( $post->post_status, $args['post_status'] );
+				}
+			);
 
-		if ( $asModel ) {
-			self::castPostsToModels( $posts );
+			if ( $asModel ) {
+				self::castPostsToModels( $posts );
+			}
+			return [
+				'posts'      => $posts,
+				'totalPages' => $query->max_num_pages,
+				'done'       => $page >= $query->max_num_pages
+			];
 		}
-
 		return [
-			'posts'      => $posts,
-			'totalPages' => $query->max_num_pages,
-			'done'       => $page >= $query->max_num_pages
+			'posts'      => [],
+			'totalPages' => 0,
+			'done'       => true
 		];
 	}
 

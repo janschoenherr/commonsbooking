@@ -98,7 +98,6 @@ class TimeframeTest extends CustomPostTypeTest {
 	}
 
 	public function testGetInRangePaginated() {
-		/*
 		$originalTimeframes = Timeframe::getInRangePaginated(
 			self::REPETITION_START,
 			self::REPETITION_END,
@@ -110,15 +109,14 @@ class TimeframeTest extends CustomPostTypeTest {
 			return $timeframe->ID;
 		}, $originalTimeframes['posts']);
 		$this->assertEqualsCanonicalizing([$this->timeframeId, $this->timeframe2Id], $postIds);
-*/
 		//create a bunch of bookings to test pagination properly
 		$bookingIds = [];
 		for($i = 0; $i < 21; $i++) {
 			$bookingIds[] = $this->createBooking(
 				$this->locationId,
 				$this->itemId,
-				strtotime("+ {10 + $i} days", strtotime(self::CURRENT_DATE)),
-				strtotime("+ {11 + $i} days", strtotime(self::CURRENT_DATE)),
+				strtotime("+ " . ($i + 10) . " days", strtotime(self::CURRENT_DATE)),
+				strtotime("+ ".($i + 11)." days", strtotime(self::CURRENT_DATE)),
 			);
 		}
 		$firstPage = Timeframe::getInRangePaginated(
@@ -152,16 +150,25 @@ class TimeframeTest extends CustomPostTypeTest {
 		);
 		$this->assertTrue($thirdPage['done']);
 		$this->assertEquals(3, $thirdPage['totalPages']);
-		$this->assertEquals(3, count($thirdPage['posts']));
+		$this->assertEquals(1, count($thirdPage['posts']));
 
 		//make sure, that no booking is in more than one page
-		$this->assertEmpty(array_intersect($firstPage['posts'], $secondPage['posts'], $thirdPage['posts']));
+		$firstPageIDS = array_map(function($booking) {
+			return $booking->ID;
+		}, $firstPage['posts']);
+		$secondPageIDS = array_map(function($booking) {
+			return $booking->ID;
+		}, $secondPage['posts']);
+		$thirdPageIDS = array_map(function($booking) {
+			return $booking->ID;
+		}, $thirdPage['posts']);
+
+		//make sure, that there are no duplicates among the pages
+		$this->assertEmpty(array_intersect($firstPageIDS, $secondPageIDS,$thirdPageIDS));
 
 		//make sure, that all bookings are in one of the pages
-		$merged = array_merge($firstPage['posts'], $secondPage['posts'], $thirdPage['posts']);
-		$this->assertEquals(23, count($merged));
-		$this->assertEqualsCanonicalizing($bookingIds, array_map(function($booking) {
-			return $booking->ID;
-		}, $merged));
+		$merged = array_merge($firstPageIDS, $secondPageIDS, $thirdPageIDS);
+		$this->assertEquals(21, count($merged));
+		$this->assertEqualsCanonicalizing($bookingIds, $merged);
 	}
 }
