@@ -387,12 +387,24 @@ class TimeframeExport {
 		else {
 			$types = [$this->exportType];
 		}
+		//some custom arg for WP_Query to improve performance
+		$customArgs = [
+			"fields"    => "ids",
+		];
+
+		//when we already know the amount of posts, we can disable the SQL_CALC_FOUND_ROWS flag
+		if ($this->totalPosts !== null) {
+			$customArgs["no_found_rows"] = true;
+		}
 		$relevantTimeframes = Timeframe::getInRangePaginated(
 			$period->getStartDate()->getTimestamp(),
 			$period->getEndDate()->getTimestamp(),
 			$page,
 			self::ITERATION_COUNTS,
-			$types
+			$types,
+			['confirmed', 'unconfirmed', 'canceled' , 'publish', 'inherit'],
+			false,
+			$customArgs
 		);
 
 		if ( $this->totalPosts === null) {
@@ -402,9 +414,9 @@ class TimeframeExport {
 		$this->exportDataComplete = $relevantTimeframes['done'];
 
 		if ( ! empty ( $relevantTimeframes['posts'] ) ) {
-			foreach ( $relevantTimeframes['posts'] as $timeframe ) {
-				if (! is_array($this->relevantTimeframes) || ! in_array($timeframe->ID, $this->relevantTimeframes) ) {
-					$this->relevantTimeframes[] = $timeframe->ID;
+			foreach ( $relevantTimeframes['posts'] as $timeframeID ) {
+				if (! is_array($this->relevantTimeframes) || ! in_array($timeframeID, $this->relevantTimeframes) ) {
+					$this->relevantTimeframes[] = $timeframeID;
 				}
 			}
 		}

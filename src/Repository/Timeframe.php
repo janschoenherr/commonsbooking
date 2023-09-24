@@ -737,12 +737,14 @@ class Timeframe extends PostRepository {
 
 		if ( $query->have_posts() ) {
 			$posts = $query->get_posts();
-			$posts = array_filter(
-				$posts,
-				function ( $post ) use ( $args ) {
-					return in_array( $post->post_status, $args['post_status'] );
-				}
-			);
+			if (! isset($args['fields']) || $args['fields'] !== 'ids') {
+				$posts = array_filter(
+					$posts,
+					function ( $post ) use ( $args ) {
+						return in_array( $post->post_status, $args['post_status'] );
+					}
+				);
+			}
 
 			if ( $asModel ) {
 				self::castPostsToModels( $posts );
