@@ -110,12 +110,6 @@ class TimeframeExport {
 		//verify nonce
 		check_ajax_referer('cb_export_timeframes', 'nonce');
 
-		$result = array(
-			'success' => false, //if neither success nor error is set, the frontend will assume that the export is still running
-			'error' => false,
-			'message' => ''
-		);
-
 		$postData = isset( $_POST['data'] ) ? (array) $_POST['data'] : array();
 		$postData = commonsbooking_sanitizeArrayorString( $postData );
 
@@ -336,19 +330,16 @@ class TimeframeExport {
 	}
 
 	/**
-	 * This will get a formatted string to display the amount of days that have been processed to the user.
+	 * This will get a formatted string to display the pages that have been processed.
 	 * @return string
 	 */
 	private function getProgressString() : string {
 		if ( $this->lastProcessedPage === null ) {
 			return '';
 		}
-		$startDt = new \DateTime( $this->exportStartDate );
-		$endDt   = new \DateTime( $this->exportEndDate );
-		$progressDt = new \DateTime( $this->lastProcessedPage );
-		$totalDays = $startDt->diff( $endDt )->days;
-		$progressDays = $startDt->diff( $progressDt )->days;
-		return sprintf( __( 'Processed %d of %d days', 'commonsbooking' ), $progressDays, $totalDays );
+		$totalBookings = $this->totalPages * self::ITERATION_COUNTS;
+		$progressBookings = $this->lastProcessedPage * self::ITERATION_COUNTS;
+		return sprintf( __( 'Processed %d of ~%d bookings', 'commonsbooking' ), $progressBookings, $totalBookings );
 	}
 
 	/**
@@ -398,7 +389,7 @@ class TimeframeExport {
 	}
 
 	public function getExportDataPaginated( $page = 1 ) {
-		$start = ( $this->lastProcessedPage === null) ? $this->exportStartDate : $this->lastProcessedPage;
+		$start = $this->exportStartDate;
 		$end = $this->exportEndDate;
 
 		$period = self::getPeriod( $start, $end );
@@ -420,11 +411,13 @@ class TimeframeExport {
 			$this->totalPages = $relevantTimeframes['totalPages'];
 		}
 		$this->lastProcessedPage = $page;
-		$this->exportDataComplete = $page['done'];
+		$this->exportDataComplete = $relevantTimeframes['done'];
 
-		foreach ( $relevantTimeframes['posts'] as $timeframe ) {
-			if (! is_array($this->relevantTimeframes) || ! in_array($timeframe->ID, $this->relevantTimeframes) ) {
-				$this->relevantTimeframes[] = $timeframe->ID;
+		if ( ! empty ( $relevantTimeframes['posts'] ) ) {
+			foreach ( $relevantTimeframes['posts'] as $timeframe ) {
+				if (! is_array($this->relevantTimeframes) || ! in_array($timeframe->ID, $this->relevantTimeframes) ) {
+					$this->relevantTimeframes[] = $timeframe->ID;
+				}
 			}
 		}
 	}
