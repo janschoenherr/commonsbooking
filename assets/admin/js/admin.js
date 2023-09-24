@@ -23,7 +23,7 @@
                 exportStartDate: exportTimerangeStart.val(),
                 exportEndDate: exportTimerangeEnd.val()
             };
-            let progress = "0/0 days exported";
+            let progress = "0/0 bookings exported";
             let data = {
                 settings: settings,
                 progress: progress
