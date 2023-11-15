@@ -3,6 +3,7 @@
 namespace CommonsBooking\Map;
 
 use CommonsBooking\Helper\Wordpress;
+use CommonsBooking\Model\Map as MapModel;
 use CommonsBooking\Wordpress\CustomPostType\Map;
 use DateTime;
 
@@ -309,7 +310,7 @@ class MapShortcode {
 			} else {
 				if ( $data['response']['code'] == 200 ) {
 
-					if ( Map::is_json( $data['body'] ) ) {
+					if ( MapModel::is_json( $data['body'] ) ) {
 						wp_send_json( $data['body'] );
 					} else {
 						wp_send_json_error( [ 'error' => 4 ], 403 );
@@ -354,7 +355,7 @@ class MapShortcode {
 			$default_date_start = $settings['filter_availability']['date_min'];
 			$default_date_end   = $settings['filter_availability']['date_max'];
 			$itemTerms          = self::getItemCategoryTerms( $settings );
-			$locations          = Map::get_locations( $cb_map_id, $itemTerms );
+			$locations          = MapModel::get_locations( $cb_map_id, $itemTerms );
 
 			//create availabilities
 			$show_item_availability        = MapAdmin::get_option( $cb_map_id, 'show_item_availability' );
@@ -368,7 +369,7 @@ class MapShortcode {
 			}
 
 			$locations = array_values( $locations ); //locations to indexed array
-			$locations = Map::cleanup_location_data( $locations, '<br>' );
+			$locations = MapModel::cleanup_location_data( $locations, '<br>' );
 
 			header( 'Content-Type: application/json' );
 			echo wp_json_encode( $locations, JSON_UNESCAPED_UNICODE );
