@@ -304,6 +304,21 @@ class Upgrade {
 			foreach ($options as $key => $value) {
 				update_post_meta( $map->ID, $key, $value );
 			}
+			if ( ! empty($options['custom_marker_media_id'] ) ){
+				// write the image url to the metabox
+				$image = wp_get_attachment_image_src( $options['custom_marker_media_id'] );
+				update_post_meta( $map->ID, 'custom_marker_media', reset( $image ) );
+			}
+			if (! empty($options['custom_marker_cluster_id'] ) ){
+				// write the image url to the metabox
+				$image = wp_get_attachment_image_src( $options['custom_marker_cluster_id'] );
+				update_post_meta( $map->ID, 'custom_marker_cluster', reset( $image ) );
+			}
+			if (! empty($options['marker_item_draft_media'] ) ){
+				// write the image url to the metabox
+				$image = wp_get_attachment_image_src( $options['marker_item_draft_media'] );
+				update_post_meta( $map->ID, 'marker_item_draft', reset( $image ) );
+			}
 		}
 	}
 }

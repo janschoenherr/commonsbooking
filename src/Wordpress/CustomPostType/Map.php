@@ -257,7 +257,7 @@ class Map extends CustomPostType {
 			array(
 				'name' => esc_html__( 'image file', 'commonsbooking' ),
 				'desc' => esc_html__( 'the default marker icon can be replaced by a custom image', 'commonsbooking' ),
-				'id'   => 'custom_marker_media_id',
+				'id'   => 'custom_marker_media',
 				'type' => 'file',
 				'options' => array(
 					'url' => false,
@@ -333,7 +333,7 @@ class Map extends CustomPostType {
 			array (
 				'name' => esc_html__( 'Custom Cluster Marker', 'commonsbooking' ),
 				'desc' => esc_html__( 'the default marker icon can be replaced by a custom image', 'commonsbooking' ),
-				'id'   => 'custom_marker_cluster_media_id',
+				'id'   => 'custom_marker_cluster_media',
 				'type' => 'file',
 				'options' => array(
 					'url' => false,
@@ -388,7 +388,7 @@ class Map extends CustomPostType {
 			array(
 				'name' => esc_html__( 'Custom Item Draft Marker', 'commonsbooking' ),
 				'desc' => esc_html__( 'the default marker icon can be replaced by a custom image', 'commonsbooking' ),
-				'id'   => 'marker_item_draft_media_id',
+				'id'   => 'marker_item_draft_media',
 				'type' => 'file',
 				'options' => array(
 					'url' => false,
