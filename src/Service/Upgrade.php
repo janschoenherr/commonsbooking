@@ -45,6 +45,9 @@ class Upgrade {
 		],
 		'2.8.5' => [
 			[self::class, 'removeBreakingPostmeta']
+		],
+		'2.9' => [
+			[self::class, 'migrateMapSettings' ]
 		]
 	];
 
@@ -282,6 +285,25 @@ class Upgrade {
 		if ( str_contains( $otherEventTitle, 'post_name' ) ) {
 			$updatedString = str_replace( 'post_name', 'post_title', $otherEventTitle );
 			Settings::updateOption( COMMONSBOOKING_PLUGIN_SLUG . '_options_advanced-options', 'event_title', $updatedString );
+		}
+	}
+
+	/**
+	 * Migrate Map Settings from old options to new CMB2 options
+	 *
+	 * @since 2.9
+	 * @return void
+	 */
+	public static function migrateMapSettings() : void {
+		$maps = get_posts( [
+			'post_type' => \CommonsBooking\Wordpress\CustomPostType\Map::$postType,
+			'numberposts' => -1
+		] );
+		foreach ($maps as $map) {
+			$options = get_post_meta( $map->ID, 'cb_map_options', true );
+			foreach ($options as $key => $value) {
+				update_post_meta( $map->ID, $key, $value );
+			}
 		}
 	}
 }
