@@ -4,8 +4,6 @@ namespace CommonsBooking\Map;
 
 use CommonsBooking\Helper\Wordpress;
 use CommonsBooking\Model\Map as MapModel;
-use CommonsBooking\Wordpress\CustomPostType\Map;
-use DateTime;
 
 class MapShortcode {
 
@@ -87,7 +85,7 @@ class MapShortcode {
 
 					wp_enqueue_script( 'cb_map_shortcode_js' );
 
-					$map_height = MapAdmin::get_option( $cb_map_id, 'map_height' );
+					$map_height = get_post_meta( $cb_map_id, 'map_height' );
 
 					return '<div id="cb-map-' . esc_attr( $cb_map_id ) . '" class="cb-wrapper cb-leaflet-map" style="width: 100%; height: ' . esc_attr( $map_height ) . 'px;"></div>';
 
@@ -110,10 +108,10 @@ class MapShortcode {
 	public static function get_settings( $cb_map_id ): array {
 		$date_min           = Wordpress::getUTCDateTime();
 		$date_min           = $date_min->format( 'Y-m-d' );
-		$max_days_in_future = MapAdmin::get_option( $cb_map_id, 'availability_max_days_to_show' );
+		$max_days_in_future = get_post_meta( $cb_map_id, 'availability_max_days_to_show' );
 		$date_max           = Wordpress::getUTCDateTime( $date_min . ' + ' . $max_days_in_future . ' days' );
 		$date_max           = $date_max->format( 'Y-m-d' );
-		$maxdays            = MapAdmin::get_option( $cb_map_id, 'availability_max_day_count' );
+		$maxdays            = get_post_meta( $cb_map_id, 'availability_max_day_count' );
 
 		$settings = [
 			'data_url'                     => get_site_url( null, '', null ) . '/wp-admin/admin-ajax.php',
@@ -132,7 +130,7 @@ class MapShortcode {
 			'asset_path'                   => COMMONSBOOKING_MAP_ASSETS_URL,
 		];
 
-		$options = MapAdmin::get_options( $cb_map_id, true );
+		$options = get_post_meta( $cb_map_id );
 
 		$pass_through = [
 			'base_map',
@@ -227,13 +225,13 @@ class MapShortcode {
 	 * get the translations for the frontend
 	 **/
 	public static function get_translation( $cb_map_id ): array {
-		$label_location_opening_hours   = MapAdmin::get_option( $cb_map_id, 'label_location_opening_hours' );
-		$label_location_contact         = MapAdmin::get_option( $cb_map_id, 'label_location_contact' );
-		$custom_no_locations_message    = MapAdmin::get_option( $cb_map_id, 'custom_no_locations_message' );
-		$custom_filterbutton_label      = MapAdmin::get_option( $cb_map_id, 'custom_filterbutton_label' );
-		$label_item_availability_filter = MapAdmin::get_option( $cb_map_id, 'label_item_availability_filter' );
-		$label_item_category_filter     = MapAdmin::get_option( $cb_map_id, 'label_item_category_filter' );
-		$label_location_distance_filter = MapAdmin::get_option( $cb_map_id, 'label_location_distance_filter' );
+		$label_location_opening_hours   = get_post_meta( $cb_map_id, 'label_location_opening_hours' );
+		$label_location_contact         = get_post_meta( $cb_map_id, 'label_location_contact' );
+		$custom_no_locations_message    = get_post_meta( $cb_map_id, 'custom_no_locations_message' );
+		$custom_filterbutton_label      = get_post_meta( $cb_map_id, 'custom_filterbutton_label' );
+		$label_item_availability_filter = get_post_meta( $cb_map_id, 'label_item_availability_filter' );
+		$label_item_category_filter     = get_post_meta( $cb_map_id, 'label_item_category_filter' );
+		$label_location_distance_filter = get_post_meta( $cb_map_id, 'label_location_distance_filter' );
 
 		return [
 			'OPENING_HOURS'          => strlen( $label_location_opening_hours ) > 0 ? $label_location_opening_hours : esc_html__( 'opening hours', 'commonsbooking' ),
@@ -274,7 +272,7 @@ class MapShortcode {
 				$last_call_timestamp = commonsbooking_sanitizeHTML( get_option( 'cb_map_last_nominatim_call', 0 ) );
 				$current_timestamp   = time();
 
-				if ( $current_timestamp > $last_call_timestamp + 1 ) {
+				if ( $current_timestamp > ( $last_call_timestamp + 1 ) ) {
 					$check_capacity = false;
 				} else {
 					sleep( 1 );
@@ -289,7 +287,7 @@ class MapShortcode {
 				'limit'  => 1,
 			];
 
-			$options = MapAdmin::get_options( sanitize_text_field( $_POST['cb_map_id'] ), true );
+			$options = get_post_meta( sanitize_text_field( $_POST['cb_map_id'] ) );
 
 			if ( $options['address_search_bounds_left_bottom_lat'] && $options['address_search_bounds_left_bottom_lon'] && $options['address_search_bounds_right_top_lat'] && $options['address_search_bounds_right_top_lon'] ) {
 				$params['bounded'] = 1;
@@ -358,8 +356,8 @@ class MapShortcode {
 			$locations          = MapModel::get_locations( $cb_map_id, $itemTerms );
 
 			//create availabilities
-			$show_item_availability        = MapAdmin::get_option( $cb_map_id, 'show_item_availability' );
-			$show_item_availability_filter = MapAdmin::get_option( $cb_map_id, 'show_item_availability_filter' );
+			$show_item_availability        = get_post_meta( $cb_map_id, 'show_item_availability' );
+			$show_item_availability_filter = get_post_meta( $cb_map_id, 'show_item_availability_filter' );
 
 			if ( $show_item_availability || $show_item_availability_filter ) {
 				$locations = MapItemAvailable::create_items_availabilities(
