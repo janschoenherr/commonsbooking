@@ -214,6 +214,7 @@ class UpgradeTest extends CustomPostTypeTest
 		foreach ($mapOptions as $key => $value) {
 			$this->assertEquals($value, get_post_meta($oldMapId, $key, true));
 		}
+		wp_delete_post($oldMapId, true);
 	}
 
 	protected function tearDown(): void {
