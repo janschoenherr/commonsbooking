@@ -4,8 +4,6 @@
 namespace CommonsBooking\Wordpress\CustomPostType;
 
 
-use CommonsBooking\Map\MapAdmin;
-use CommonsBooking\Map\MapSettings;
 use CommonsBooking\Map\MapShortcode;
 use CommonsBooking\Repository\Item;
 use CommonsBooking\Repository\Location;
@@ -13,6 +11,13 @@ use function __;
 
 class Map extends CustomPostType {
 
+	/**
+	 * The default coordinates of the map center.
+	 * Is used when no other coordinates are set.
+	 * These are currently the coordinates of Cologne, Germany.
+	 */
+	const LATITUDE_DEFAULT = 50.937531;
+	const LONGITUDE_DEFAULT = 6.960279;
 	/**
 	 * @var string
 	 */
@@ -175,14 +180,14 @@ class Map extends CustomPostType {
 				'desc' => esc_html__( 'the latitude of the map center when the map is loaded', 'commonsbooking' ),
 				'id'   => 'lat_start',
 				'type' => 'text_small',
-				'default' => '50.937531',
+				'default' => self::LATITUDE_DEFAULT,
 			),
 			array(
 				'name' => esc_html__( 'start longitude' , 'commonsbooking' ),
 				'desc' => esc_html__( 'the longitude of the map center when the map is loaded', 'commonsbooking' ),
 				'id'   => 'lon_start',
 				'type' => 'text_small',
-				'default' => '6.960279',
+				'default' => self::LONGITUDE_DEFAULT,
 			),
 			array(
 				'name' => esc_html__( 'initial adjustment to marker bounds', 'commonsbooking' ),
@@ -545,6 +550,7 @@ class Map extends CustomPostType {
 
 	/**
 	 * enforce the replacement of the original (google maps) link target on cb_item booking pages
+	 * THIS FUNCTION IS NOT IN USE AND PROBABLY @deprecated
 	 **/
 	public static function replace_map_link_target() {
 		global $post;

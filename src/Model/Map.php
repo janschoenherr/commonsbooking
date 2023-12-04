@@ -3,19 +3,17 @@
 namespace CommonsBooking\Model;
 
 use CommonsBooking\Helper\Helper;
-use CommonsBooking\Map\MapAdmin;
 use CommonsBooking\Repository\Item;
 use CommonsBooking\Repository\Timeframe;
 use CommonsBooking\Wordpress\CustomPostType\Location;
 use Exception;
 
 /**
- * This class currently does not have any functionality.
- * It's just a placeholder for the Map post type.
- * Because the map feature was taken from another plugin, it is not yet adapted to the structure of this plugin.
- * This class will be used to adapt the map feature to the structure of this plugin.
- *
- * Currently, it's only referenced by the @see \CommonsBooking\Wordpress\CustomPostType\CustomPostType::getModel() method to use the methods from the CustomPost class.
+ * This class contains a lot of static methods that used to reside in @see \CommonsBooking\Wordpress\CustomPostType\Map
+ * An attempt was made with issue #1412 to make the Map class more object-oriented.
+ * Many methods here are not properly camel-cased, because the map functionality was imported into CB2.
+ * The methods here are used for the cb_map and cb_search shortcode.
+ * You can also create an object of the map to use the CustomPost methods such as getMeta().
  */
 class Map extends CustomPost
 {
@@ -37,7 +35,7 @@ class Map extends CustomPost
 
 		if ( is_array( $value ) ) {
 			foreach ( $value as &$child_value ) {
-				$child_value = \CommonsBooking\Wordpress\CustomPostType\Map::cleanup_location_data_entry( $child_value, $linebreak_replacement );
+				$child_value = self::cleanup_location_data_entry( $child_value, $linebreak_replacement );
 			}
 		}
 
@@ -54,7 +52,7 @@ class Map extends CustomPost
 	 */
 	public static function cleanup_location_data( $locations, $linebreak_replacement ) {
 		foreach ( $locations as &$location ) {
-			$location = \CommonsBooking\Wordpress\CustomPostType\Map::cleanup_location_data_entry( $location, $linebreak_replacement );
+			$location = self::cleanup_location_data_entry( $location, $linebreak_replacement );
 		}
 
 		return $locations;
@@ -101,14 +99,11 @@ class Map extends CustomPost
 	 * @return array
 	 * @throws Exception
 	 */
-	public static function get_locations( $cb_map_id, $mapItemTerms ): array {
+	public function get_locations( $mapItemTerms ): array {
 		$locations = [];
 
-		$show_location_contact       = MapAdmin::get_option( $cb_map_id, 'show_location_contact' );
-		$show_location_opening_hours = MapAdmin::get_option( $cb_map_id, 'show_location_opening_hours' );
-
-		$preset_categories          = MapAdmin::get_option( $cb_map_id, 'cb_items_preset_categories' );
-		$preset_location_categories = MapAdmin::get_option( $cb_map_id, 'cb_locations_preset_categories' );
+		$preset_categories          = $this->getMeta( 'cb_items_preset_categories' );
+		$preset_location_categories = $this->getMeta( 'cb_locations_preset_categories' );
 
 
 		$args = [
@@ -128,13 +123,8 @@ class Map extends CustomPost
 			true
 		);
 
-		/** @var \CommonsBooking\Model\Location $post */
-		foreach ( $locationObjects as $post ) {
-			$location_meta = get_post_meta( $post->ID, null, true );
-
-			//set serialized empty array if not set
-			$closed_days = isset( $location_meta['commons-booking_location_closeddays'] ) ? $location_meta['commons-booking_location_closeddays'][0] : 'a:0:{}';
-
+		/** @var \CommonsBooking\Model\Location $location */
+		foreach ( $locationObjects as $location ) {
 			$items = [];
 
 			/**
@@ -142,12 +132,12 @@ class Map extends CustomPost
 			 */
 
 			if ( $preset_location_categories ) {
-				if ( ! has_term( $preset_location_categories, 'cb_locations_category', $post->ID ) ) {
+				if ( ! has_term( $preset_location_categories, 'cb_locations_category', $location->ID ) ) {
 					continue; //skip to next location in loop
 				}
 			}
 
-			foreach ( Item::getByLocation( $post->ID, true ) as $item ) {
+			foreach ( Item::getByLocation( $location->ID, true ) as $item ) {
 
 				$item_terms = wp_get_post_terms(
 					$item->ID,
@@ -183,7 +173,7 @@ class Map extends CustomPost
 
 				$timeframesData = [];
 				$timeframes     = Timeframe::getBookableForCurrentUser(
-					[ $post->ID ],
+					[ $location->ID ],
 					[ $item->ID ],
 					null,
 					true
@@ -214,7 +204,7 @@ class Map extends CustomPost
 					'short_desc' => has_excerpt( $item->ID ) ? wp_strip_all_tags( get_the_excerpt( $item->ID ) ) : "",
 					'status'     => $item->post_status,
 					'terms'      => $item_terms,
-					'link'       => add_query_arg( 'cb-location', $post->ID, get_permalink( $item->ID ) ),
+					'link'       => add_query_arg( 'cb-location', $location->ID, get_permalink( $item->ID ) ),
 					'thumbnail'  => $thumbnail ?: null,
 					'images'     => $images,
 					'timeframes' => $timeframesData
@@ -222,23 +212,18 @@ class Map extends CustomPost
 			}
 
 			if ( count( $items ) ) {
-				$locations[ $post->ID ] = [
-					'lat'           => (float) $location_meta['geo_latitude'][0],
-					'lon'           => (float) $location_meta['geo_longitude'][0],
-					'location_name' => $post->post_title,
-					'location_link' => get_permalink( $post->ID ),
-					'closed_days'   => unserialize( $closed_days ),
+				$locations[ $location->ID ] = [
+					'lat'           => (float) $location->getMeta('geo_latitude'),
+					'lon'           => (float) $location->getMeta('geo_longitude'),
+					'location_name' => $location->post_title,
+					'location_link' => get_permalink( $location->ID ),
 					'address'       => [
-						'street' => $location_meta[ COMMONSBOOKING_METABOX_PREFIX . 'location_street' ][0],
-						'city'   => $location_meta[ COMMONSBOOKING_METABOX_PREFIX . 'location_city' ][0],
-						'zip'    => $location_meta[ COMMONSBOOKING_METABOX_PREFIX . 'location_postcode' ][0],
+						'street' => $location->getMeta(COMMONSBOOKING_METABOX_PREFIX . 'location_street'),
+						'city'   => $location->getMeta(COMMONSBOOKING_METABOX_PREFIX . 'location_city'),
+						'zip'    => $location->getMeta(COMMONSBOOKING_METABOX_PREFIX . 'location_postcode'),
 					],
 					'items'         => $items,
 				];
-
-				if ( $show_location_contact ) {
-					$locations[ $post->ID ]['contact'] = $location_meta[ COMMONSBOOKING_METABOX_PREFIX . 'location_contact' ][0];
-				}
 			}
 		}
 
