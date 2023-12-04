@@ -46,7 +46,7 @@ class Map extends CustomPostType {
 		);
 
 
-		foreach ( $this->getCustomFields() as $customField ) {
+		foreach ( self::getCustomFields() as $customField ) {
 			$cmb->add_field( $customField );
 		}
 	}
@@ -55,7 +55,7 @@ class Map extends CustomPostType {
 		return new \CommonsBooking\View\Map();
 	}
 
-	protected function getCustomFields() {
+	public static function getCustomFields(): array {
 		return array(
 			array(
 				'name' => esc_html__( 'These settings help you to configure the usage and appearance of Commons Booking Map', 'commonsbooking' ),

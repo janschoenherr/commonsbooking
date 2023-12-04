@@ -5,6 +5,7 @@ namespace CommonsBooking\Service;
 use CommonsBooking\Model\Timeframe;
 use CommonsBooking\Plugin;
 use CommonsBooking\Settings\Settings;
+use CommonsBooking\Wordpress\CustomPostType\Map;
 use CommonsBooking\Wordpress\Options\AdminOptions;
 use Psr\Cache\InvalidArgumentException;
 
@@ -304,7 +305,22 @@ class Upgrade {
 			if ( empty($options) ) {
 				continue;
 			}
+			//will map to an associative array with key being the option name and the value the default value
+			$defaultValues = array_reduce(
+				Map::getCustomFields(),
+				function ( $result, $option ) {
+					if ( isset( $option['default'] ) ) {
+						$result[$option['id']] = $option['default'];
+					}
+					return $result;
+				},
+				array()
+			);
 			foreach ($options as $key => $value) {
+				if ( empty($value) && isset($defaultValues[$key]) ) {
+					//fetch from default values when key happens to be empty
+					$value = $defaultValues[$key];
+				}
 				update_post_meta( $map->ID, $key, $value );
 			}
 			if ( ! empty($options['custom_marker_media_id'] ) ){

@@ -180,9 +180,6 @@ class MapData {
 			'asset_path'                   => COMMONSBOOKING_MAP_ASSETS_URL,
 		];
 
-		//TODO, use getMeta() function here instead.
-		$options = get_post_meta( $cb_map_id );
-
 		$pass_through = [
 			'base_map',
 			'show_scale',
@@ -206,61 +203,54 @@ class MapData {
 			'label_item_category_filter',
 		];
 
-		foreach ( $options as $key => $value ) {
-			if ( in_array( $key, $pass_through ) ) {
-				$settings[ $key ] = $value;
-			} elseif ( $key == 'custom_marker_media_id' ) {
-				if ( $value != null ) {
-					$settings['custom_marker_icon'] = [
-						'iconUrl'    => wp_get_attachment_url( $options['custom_marker_media_id'] ),
-						'iconSize'   => [ $options['marker_icon_width'], $options['marker_icon_height'] ],
-						'iconAnchor' => [ $options['marker_icon_anchor_x'], $options['marker_icon_anchor_y'] ],
+		foreach ($pass_through as $key) {
+			$settings[$key] = $map->getMeta($key);
+		}
+
+		if ($map->getMeta('custom_marker_media_id')) {
+			$settings['custom_marker_icon'] = [
+				'iconUrl'    => wp_get_attachment_url($map->getMeta('custom_marker_media_id')),
+				'iconSize'   => [$map->getMeta('marker_icon_width'), $map->getMeta('marker_icon_height')],
+				'iconAnchor' => [$map->getMeta('marker_icon_anchor_x'), $map->getMeta('marker_icon_anchor_y')],
+			];
+		}
+
+		if ($map->getMeta('marker_item_draft_media_id')) {
+			$settings['item_draft_marker_icon'] = [
+				'iconUrl'    => wp_get_attachment_url($map->getMeta('marker_item_draft_media_id')),
+				'iconSize'   => [$map->getMeta('marker_item_draft_icon_width'), $map->getMeta('marker_item_draft_icon_height')],
+				'iconAnchor' => [$map->getMeta('marker_item_draft_icon_anchor_x'), $map->getMeta('marker_item_draft_icon_anchor_y')],
+			];
+		}
+
+		if ($map->getMeta('custom_marker_cluster_media_id')) {
+			$settings['marker_cluster_icon'] = [
+				'url'  => wp_get_attachment_url($map->getMeta('custom_marker_cluster_media_id')),
+				'size' => [
+					'width'  => $map->getMeta('marker_cluster_icon_width'),
+					'height' => $map->getMeta('marker_cluster_icon_height'),
+				],
+			];
+		}
+
+		//categories are only meant to be shown on local maps
+		if ($map->getMeta('cb_items_available_categories')) {
+			$settings['filter_cb_item_categories'] = [];
+			$current_group_id                      = null;
+			foreach ( $map->getMeta('cb_items_available_categories') as $categoryKey => $content ) {
+				if ( substr( $categoryKey, 0, 1 ) == 'g' ) {
+					$current_group_id                                      = $categoryKey;
+					$settings['filter_cb_item_categories'][ $categoryKey ] = [
+						'name'     => $content,
+						'elements' => [],
 					];
-				}
-			} elseif ( $key == 'marker_item_draft_media_id' ) {
-				if ( $value != null ) {
-					$settings['item_draft_marker_icon'] = [
-						'iconUrl'    => wp_get_attachment_url( $options['marker_item_draft_media_id'] ),
-						'iconSize'   => [
-							$options['marker_item_draft_icon_width'],
-							$options['marker_item_draft_icon_height'],
-						], //[27, 35], // size of the icon
-						'iconAnchor' => [
-							$options['marker_item_draft_icon_anchor_x'],
-							$options['marker_item_draft_icon_anchor_y'],
-						], //[13.5, 0], // point of the icon which will correspond to marker's location
+				} else {
+					$settings['filter_cb_item_categories'][ $current_group_id ]['elements'][] = [
+						'cat_id' => $categoryKey,
+						'markup' => $content,
 					];
-				}
-			} elseif ( $key == 'custom_marker_cluster_media_id' ) {
-				if ( $value != null ) {
-					$settings['marker_cluster_icon'] = [
-						'url'  => wp_get_attachment_url( $options['custom_marker_cluster_media_id'] ),
-						'size' => [
-							'width'  => $options['marker_cluster_icon_width'],
-							'height' => $options['marker_cluster_icon_height'],
-						],
-					];
-				}
-			} //categories are only meant to be shown on local maps
-			elseif ( $key == 'cb_items_available_categories' ) {
-				$settings['filter_cb_item_categories'] = [];
-				$current_group_id                      = null;
-				foreach ( $options['cb_items_available_categories'] as $categoryKey => $content ) {
-					if ( substr( $categoryKey, 0, 1 ) == 'g' ) {
-						$current_group_id                                      = $categoryKey;
-						$settings['filter_cb_item_categories'][ $categoryKey ] = [
-							'name'     => $content,
-							'elements' => [],
-						];
-					} else {
-						$settings['filter_cb_item_categories'][ $current_group_id ]['elements'][] = [
-							'cat_id' => $categoryKey,
-							'markup' => $content,
-						];
-					}
 				}
 			}
-
 		}
 
 		return $settings;
