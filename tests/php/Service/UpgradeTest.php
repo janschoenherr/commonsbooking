@@ -149,7 +149,7 @@ class UpgradeTest extends CustomPostTypeTest
 			'base_map' => 1,
 			'show_scale' => true,
 			'map_height' => 400,
-			'custom_no_locations_message' => '',
+			'custom_no_locations_message' => 'No locations found',
 			'custom_filterbutton_label' => '',
 			'zoom_min' => 9,
 			'zoom_max' => 19,
