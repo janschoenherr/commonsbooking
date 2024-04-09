@@ -51,8 +51,8 @@ class BookingMessageTest extends Email_Test_Case
 		parent::setUp();
 		$subject = '{{item:post_title}} | {{location:post_title}}';
 		$body = '{{booking:post_title}} | {{user:user_login}}';
-		$expectedSubject = self::ITEM_NAME . ' | ' . self::LOCATION_NAME;
-		$expectedBody = self::BOOKING_NAME . ' | ' . self::BOOKINGUSER_USERNAME;
+		$this->expectedSubject = self::ITEM_NAME . ' | ' . self::LOCATION_NAME;
+		$this->expectedBody = self::BOOKING_NAME . ' | ' . self::BOOKINGUSER_USERNAME;
 		//set template settings
 		Settings::updateOption('commonsbooking_options_templates', 'emailtemplates_mail-booking-confirmed-subject', $subject);
 		Settings::updateOption('commonsbooking_options_templates', 'emailtemplates_mail-booking-confirmed-body', $body);
@@ -62,7 +62,7 @@ class BookingMessageTest extends Email_Test_Case
 		Settings::updateOption('commonsbooking_options_templates', 'emailtemplates_mail-booking_ics_event-description', $body);
 		Settings::updateOption('commonsbooking_options_templates', 'emailtemplates_mail-booking_ics_attach', 'on');
 
-		$bookingMessage = new BookingMessage($this->bookingId, 'confirmed');
+		$this->bookingMessage = new BookingMessage($this->bookingId, 'confirmed');
 	}
 
 
