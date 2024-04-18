@@ -47,6 +47,9 @@ class Upgrade {
 		'2.8.2' => [
 			[ self::class, 'resetBrokenColorScheme' ],
 			[ self::class, 'fixBrokenICalTitle' ]
+		],
+		'2.9.2' => [
+			[self::class, 'enableLocationBookingNotification']
 		]
 	];
 
@@ -68,9 +71,6 @@ class Upgrade {
 		],
 		'2.9.0' => [
 			[ self::class, 'setMultiSelectTimeFrameDefault' ]
-		],
-		'2.9.2' => [
-			[self::class, 'enableLocationBookingNotification']
 		]
 	];
 
