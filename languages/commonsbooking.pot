@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2024-04-11T09:59:47+00:00\n"
+"POT-Creation-Date: 2024-04-18T17:23:22+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.10.0\n"
 "X-Domain: commonsbooking\n"
@@ -1595,26 +1595,26 @@ msgstr ""
 msgid "The other timeframe is overlapping with your weekly configuration."
 msgstr ""
 
-#: src/Plugin.php:304
 #: src/Plugin.php:305
+#: src/Plugin.php:306
 msgid "Item Categories"
 msgstr ""
 
-#: src/Plugin.php:314
 #: src/Plugin.php:315
+#: src/Plugin.php:316
 msgid "Location Categories"
 msgstr ""
 
-#: src/Plugin.php:420
+#: src/Plugin.php:421
 msgid "Item Category"
 msgstr ""
 
-#: src/Plugin.php:451
+#: src/Plugin.php:452
 msgid "Location Category"
 msgstr ""
 
-#: src/Plugin.php:653
-#: src/Plugin.php:668
+#: src/Plugin.php:654
+#: src/Plugin.php:669
 #: src/Wordpress/CustomPostType/Booking.php:977
 msgid "CommonsBooking Bookings"
 msgstr ""
